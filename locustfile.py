@@ -40,23 +40,23 @@ class WebsiteTestUser(HttpUser):
         random_number = random.randint(1, 11)
         item = self.load_file('data_loader/setup_data/sentinel-s2-l2a-cogs_0_100.json')
         random_id = item["features"][random_number]["id"]
-        self.client.get(f"http://localhost:8083/collections/test-collection/items/{random_id}")
+        self.client.get(f"http://localhost:8083/collections/test-collection/items/{random_id}", name="/item")
 
     @task(6)
     def get_bbox_search(self):
         self.client.get("http://localhost:8083/search?bbox=-16.171875,-79.095963,179.992188,19.824820")
 
-    # @task(7)
-    # def post_bbox_search(self):
-    #     self.client.post("http://localhost:8083/search", json={"bbox":[16.171875,-79.095963,179.992188,19.824820]})
+    @task(7)
+    def post_bbox_search(self):
+        self.client.post("http://localhost:8083/search", json={"bbox":[16.171875,-79.095963,179.992188,19.824820]}, name="bbox")
 
     @task(8)
-    def post_bbox_search(self):
-        self.client.post("http://localhost:8083/search", json={"bbox":[16.171875,-79.095963,179.992188,19.824820]})
+    def post_intersects_search(self):
         self.client.post(
             "http://localhost:8083/search", 
             json={
                 "collections":["test-collection"],
                 "intersects":{"type": "Point", "coordinates": [150.04, -33.14]}
-            }
+            },
+            name="point-intersects"
         )
