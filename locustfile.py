@@ -1,4 +1,6 @@
 from locust import HttpUser, task, constant, tag
+from helpers import test_item
+
 import random
 import json
 
@@ -67,4 +69,18 @@ class WebsiteTestUser(HttpUser):
                 "intersects":{"type": "Point", "coordinates": [150.04, -33.14]}
             },
             name="point-intersects"
+        )
+
+    #### CRUD routes
+    @tag('create_item')
+    @task(1)
+    def create_item(self):
+        random_number = random.randint(1, 100000)
+        item = test_item
+        item["id"] = f"test-item-{random_number}"
+        item["collection"] = "test-collection"
+        self.client.post(
+            "http://localhost:8083/collections/test-collection/items",
+            json=item,
+            name="create-item"
         )
