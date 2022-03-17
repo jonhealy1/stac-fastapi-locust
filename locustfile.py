@@ -2,7 +2,7 @@ from locust import HttpUser, task, between
 
 class WebsiteTestUser(HttpUser):
 
-    wait_time = between(0.5, 3.0)
+    # wait_time = between(0.0001, 0.0002)
     
     def on_start(self):
         """ on_start is called when a Locust start before any task is scheduled """
@@ -19,3 +19,11 @@ class WebsiteTestUser(HttpUser):
     @task(2)
     def get_all_collections(self):
         self.client.get("http://localhost:8083/collections")
+
+    @task(3)
+    def get_collection(self):
+        self.client.get("http://localhost:8083/collections/test-collection")
+
+    @task(4)
+    def get_item_collection(self):
+        self.client.get("http://localhost:8083/collections/test-collection/items")
