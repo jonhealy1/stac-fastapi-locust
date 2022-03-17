@@ -1,4 +1,6 @@
 from locust import HttpUser, task, between
+import random
+import json
 
 class WebsiteTestUser(HttpUser):
 
@@ -11,6 +13,11 @@ class WebsiteTestUser(HttpUser):
     def on_stop(self):
         """ on_stop is called when the TaskSet is stopping """
         pass
+
+    def load_file(self, file) -> dict:
+        f = open(file)
+        data = json.load(f)
+        return data
 
     @task(1)
     def get_root_catalog(self):
@@ -30,4 +37,7 @@ class WebsiteTestUser(HttpUser):
 
     @task(5)
     def get_item(self):
-        self.client.get("http://localhost:8083/collections/test-collection/items/S2B_1CCV_20181004_0_L2A")
+        random_number = random.randint(1, 11)
+        item = self.load_file('data_loader/setup_data/sentinel-s2-l2a-cogs_0_100.json')
+        random_id = item["features"][random_number]["id"]
+        self.client.get(f"http://localhost:8083/collections/test-collection/items/{random_id}")
