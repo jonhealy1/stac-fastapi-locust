@@ -17,6 +17,7 @@ Locust load balancing for stac-fastapi
 
 ## Run Load Balancing   
 - go to ```http://localhost:8089``` and start with desired settings
+- for testing locally from docker-compose in this repo, set Host to: ```http://localhost:8083```
 
 ## References  
   
