@@ -7,7 +7,6 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    platform: linux/amd64
     environment:
       - APP_HOST=0.0.0.0
       - APP_PORT=8082
@@ -49,7 +48,3 @@ services:
     ports:
       - "5439:5432"
     command: postgres -N 500
-
-networks:
-  default:
-    name: stac-fastapi-network
