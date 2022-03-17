@@ -27,3 +27,7 @@ class WebsiteTestUser(HttpUser):
     @task(4)
     def get_item_collection(self):
         self.client.get("http://localhost:8083/collections/test-collection/items")
+
+    @task(5)
+    def get_item(self):
+        self.client.get("http://localhost:8083/collections/test-collection/items/S2B_1CCV_20181004_0_L2A")
