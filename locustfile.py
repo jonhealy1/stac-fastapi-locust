@@ -41,3 +41,7 @@ class WebsiteTestUser(HttpUser):
         item = self.load_file('data_loader/setup_data/sentinel-s2-l2a-cogs_0_100.json')
         random_id = item["features"][random_number]["id"]
         self.client.get(f"http://localhost:8083/collections/test-collection/items/{random_id}")
+        
+    @task(6)
+    def get_bbox_search(self):
+        self.client.get("http://localhost:8083/search?bbox=-16.171875,-79.095963,179.992188,19.824820")
