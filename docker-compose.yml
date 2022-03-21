@@ -1,12 +1,23 @@
 version: '3'
 services:
+  stac-taurus:
+    container_name: stac-taurus
+    image: stac-taurus
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command:
+      bash -c "stac-taurus --help"
+    volumes:
+      - ./log-files:/app
+
   app-pgstac:
     container_name: stac-fastapi-pgstac
     image: stac-utils/stac-fastapi
     restart: always
     build:
       context: .
-      dockerfile: Dockerfile
+      dockerfile: backends/Dockerfile-pgstac
     environment:
       - APP_HOST=0.0.0.0
       - APP_PORT=8082

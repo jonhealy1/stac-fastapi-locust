@@ -1,6 +1,6 @@
 """stac-fastapi-taurus setup.py
 """
-from setuptools import setup, find_packages
+from setuptools import setup
 
 __version__ = "0.1.0"
 
@@ -12,7 +12,6 @@ setup(
     version=__version__,
     description="Load balancing for stac compliant apis",
     url="https://github.com/sparkgeo/stac-fastapi-taurus",
-    packages=find_packages(exclude=("tests",)),
     include_package_data=True,
     install_requires=[
         "click>=7.1.2",
@@ -21,6 +20,7 @@ setup(
         "Cython",
         "bzt",
     ],
+    packages=["stac_taurus"],
     entry_points={
         'console_scripts': ['stac-taurus=stac_taurus.cli:main']
     },
