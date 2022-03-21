@@ -12,11 +12,11 @@ class WebsiteTestUser(HttpUser):
     default_load_multiplier = 1
 
     def on_start(self):
-        """on_start is called when a Locust start before any task is scheduled"""
+        """Called when a Locust start before any task is scheduled."""
         pass
 
     def on_stop(self):
-        """on_stop is called when the TaskSet is stopping"""
+        """Called when the TaskSet is stopping."""
         pass
 
     def load_file(self, file) -> dict:
@@ -25,7 +25,7 @@ class WebsiteTestUser(HttpUser):
         return data
 
     def get_collection_ids(self):
-        """get all collection ids"""
+        """Get all Collection IDs."""
         collections_response = self.client.get("/collections", name="get-collections")
         collections_body = collections_response.json()
         collection_ids = [
@@ -34,11 +34,11 @@ class WebsiteTestUser(HttpUser):
         return collection_ids
 
     def parse_request_items(self, collection_id, items_response):
-        """parse response, if > 0 items then request Items"""
+        """Parse response, if > 0 items then request Items."""
         items_body = items_response.json()
         item_ids = [feature["id"] for feature in items_body["features"]]
 
-        # request between 1 and min(10, result count) Items, serially
+        # Request between 1 and min(10, result count) Items, serially
         for item_id in item_ids:
             self.client.get(
                 f"/collections/{collection_id}/items/{item_id}", name="get-item"
@@ -52,7 +52,7 @@ class WebsiteTestUser(HttpUser):
         return collection_response.json()["extent"]["spatial"]["bbox"][0]
 
     def get_sortby(self, get_post):
-        """randomise the sort order among available fields"""
+        """Randomize the sort order among available fields."""
         # TODO retrieve all sortable fields common to items in collection
         fields = ["id", "properties.datetime", "properties.eo:cloud_cover"]
         directions = [random.choice(["+", "-"]) for _ in fields]
@@ -130,11 +130,11 @@ class WebsiteTestUser(HttpUser):
     @tag("basic_nonspatial")
     @task(default_load_multiplier)
     def basic_nonspatial_search(self):
-        """simulate a user searching for a collection by id"""
+        """Simulate a user searching for a Collection by ID."""
         collection_ids = self.get_collection_ids()
         collection_id = random.choice(collection_ids)
 
-        # randomize GET / POST
+        # Randomize GET / POST
         get_post = random.choice(["GET", "POST"])
         if get_post == "GET":
             items_response = self.client.get(
@@ -152,17 +152,17 @@ class WebsiteTestUser(HttpUser):
     @tag("intersects_sortby")
     @task(default_load_multiplier)
     def paged_poi_search(self):
-        """simulate a user seaching within a collection bbox using a point"""
-        # get the bbox of a random collection
+        """Simulate a user seaching within a collection bbox using a point."""
+        # Get the bbox of a random collection
         collection_ids = self.get_collection_ids()
         collection_id = random.choice(collection_ids)
         bbox = self.get_collection_bbox(collection_id)
 
-        # create random point inside bbox for /search intersects
+        # Create random point inside bbox for /search intersects
         x = random.random() * (bbox[2] - bbox[0]) + bbox[0]
         y = random.random() * (bbox[3] - bbox[1]) + bbox[1]
 
-        # search (only POST possible for "intersects")
+        # Search (only POST possible for "intersects")
         sortby = self.get_sortby("POST")
         items_response = self.client.post(
             "/search",
@@ -179,18 +179,18 @@ class WebsiteTestUser(HttpUser):
     @tag("user_bbox")
     @task(default_load_multiplier)
     def paged_bbox_search(self):
-        """simulate a user searching within a collection bbox using an AOI"""
-        # get the bbox of a random collection
+        """Simulate a user searching within a collection bbox using an AOI."""
+        # Get the bbox of a random collection
         collection_ids = self.get_collection_ids()
         collection_id = random.choice(collection_ids)
         bbox = self.get_collection_bbox(collection_id)
 
-        # create a random search bbox inside collection bbox
+        # Create a random search bbox inside collection bbox
         x = [random.random() * (bbox[2] - bbox[0]) + bbox[0] for _ in range(2)]
         y = [random.random() * (bbox[3] - bbox[1]) + bbox[1] for _ in range(2)]
         search_bbox = [min(x), min(y), max(x), max(y)]
 
-        # search, randomly using GET or POST
+        # Search, randomly using GET or POST
         get_post = random.choice(["GET", "POST"])
         sortby = self.get_sortby(get_post)
         if get_post == "GET":
@@ -226,7 +226,7 @@ class WebsiteTestUser(HttpUser):
         )
 
 
-# run tests in debugger
-# if launched directly, e.g. "python3 debugging.py", not "locust -f debugging.py"
+# Run tests in debugger if launched directly,
+# e.g. "python3 debugging.py", not "locust -f debugging.py"
 if __name__ == "__main__":
     run_single_user(WebsiteTestUser)
