@@ -22,7 +22,7 @@ Taurus and Locust load balancing for stac-fastapi
 ## Inside of Taurus Wrapper
 ```$ stac-taurus --taurus```
 
-## Debugging Locust tests using a single simulated user
+## Debugging Locust tasks using a single simulated user
 ```$ python config_files/locustfile.py```
 
 ## References  
