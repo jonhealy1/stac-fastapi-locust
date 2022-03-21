@@ -22,7 +22,7 @@ setup(
         "bzt",
     ],
     entry_points={
-        'console_scripts': ['stac-taurus=stac_taurus_cli.cli:main']
+        'console_scripts': ['stac-taurus=stac_taurus.cli:main']
     },
     author="Jonathan Healy",
     author_email="jonathan.d.healy@gmail.com",

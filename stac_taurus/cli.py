@@ -1,5 +1,9 @@
 import click
 import os
+import sys
+
+sys.path
+sys.executable
 
 @click.option("-l", "--locust", is_flag=True, help="Run Locust outside of the Taurus wrapper.")
 @click.option("-t", "--taurus", is_flag=True, help="Run the Taurus wrapper.")
