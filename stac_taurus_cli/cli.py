@@ -8,6 +8,6 @@ import os
 @click.version_option(version="0.1.4")
 def main(locust, taurus):
     if locust:
-        os.system('locust')
+        os.system('locust --locustfile config_files/locustfile.py')
     if taurus:
-        os.system('bzt taurus_locust.yml')
+        os.system('bzt config_files/taurus_locust.yml')
