@@ -1,5 +1,7 @@
-# stac-fastapi-locust
-Locust load balancing for stac-fastapi
+# stac-fastapi-taurus
+Taurus and Locust load balancing for stac-fastapi
+
+![Alt text](readme_files/taurus-pgstac.png?raw=true "stac-fastapi-pgstac")
 
 
 ## Run stac-fastapi pgstac 
@@ -10,17 +12,15 @@ Locust load balancing for stac-fastapi
 ```$ make ingest```
 
 ## Install
-```$ pip install -e .```
+```$ pip install .```
 
-## Start Locust
-```$ stac-taurus --locust```
-
-## Run Locust Load Balancing   
+## Run Locust Load Balancing Ouside of Taurus Wrapper
+```$ stac-taurus --locust```  
 - go to ```http://localhost:8089``` and start with desired settings
 - for testing locally from docker-compose in this repo, set Host to: ```http://localhost:8083```
 
-## Run Taurus Load Balancing
-```$ stac-taurus --locust```
+## Inside of Taurus Wrapper
+```$ stac-taurus --taurus```
 
 ## References  
   
