@@ -17,5 +17,6 @@ COPY . /app
 ENV PATH=$PATH:/install/bin
 
 RUN mkdir -p /install && \
+    pip install --upgrade wheel && \
     pip install uvicorn && \
-    pip install stac-fastapi.pgstac==2.3.0
+    pip install stac-fastapi.pgstac==2.3.0 
