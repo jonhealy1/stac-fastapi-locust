@@ -6,12 +6,10 @@ import json
 
 
 class WebsiteTestUser(HttpUser):
-    ### TODO integrate with debug call of WebsiteTestUser
+    # If one declares a host attribute in the user class, it will be used in the
+    # case when no --host is specified on the command line or in the web request.
     host = "http://localhost:8083"
-    ###
-    default_load_mulitplier = 0
-
-    wait_time = constant(0.01)
+    default_load_multiplier = 1
 
     def on_start(self):
         """on_start is called when a Locust start before any task is scheduled"""
@@ -26,50 +24,99 @@ class WebsiteTestUser(HttpUser):
         data = json.load(f)
         return data
 
+    def get_collection_ids(self):
+        """get all collection ids"""
+        collections_response = self.client.get("/collections", name="get-collections")
+        collections_body = collections_response.json()
+        collection_ids = [
+            collection["id"] for collection in collections_body["collections"]
+        ]
+        return collection_ids
+
+    def parse_request_items(self, collection_id, items_response):
+        """parse response, if > 0 items then request Items"""
+        items_body = items_response.json()
+        item_ids = [feature["id"] for feature in items_body["features"]]
+
+        # request between 1 and min(10, result count) Items, serially
+        for item_id in item_ids:
+            self.client.get(
+                f"/collections/{collection_id}/items/{item_id}", name="get-item"
+            )
+
+    def get_collection_bbox(self, collection_id):
+        """get the bbox of a collection"""
+        collection_response = self.client.get(
+            f"/collections/{collection_id}", name="get-collection"
+        )
+        return collection_response.json()["extent"]["spatial"]["bbox"][0]
+
+    def get_sortby(self, get_post):
+        """randomise the sort order among available fields"""
+        # TODO retrieve all sortable fields common to items in collection
+        fields = ["id", "properties.datetime", "properties.eo:cloud_cover"]
+        directions = [random.choice(["+", "-"]) for _ in fields]
+        sym2text = {"+": "asc", "-": "desc"}
+
+        if get_post == "GET":
+            return [
+                f"{direction}{field}" for direction, field in zip(directions, fields)
+            ]
+        elif get_post == "POST":
+            return [
+                {"field": field, "direction": sym2text[direction]}
+                for field, direction in zip(fields, directions)
+            ]
+
     @tag("root_catalog")
-    @task(default_load_mulitplier)
+    @task(default_load_multiplier)
     def get_root_catalog(self):
-        self.client.get("/")
+        self.client.get("/", name="get-landing")
 
     @tag("all_collections")
-    @task(default_load_mulitplier)
+    @task(default_load_multiplier)
     def get_all_collections(self):
-        self.client.get("/collections")
+        self.client.get("/collections", name="get-collections")
 
     @tag("get_collection")
-    @task(default_load_mulitplier)
+    @task(default_load_multiplier)
     def get_collection(self):
-        self.client.get("/collections/test-collection")
+        self.client.get("/collections/test-collection", name="get-collection")
 
     @tag("item_collection")
-    @task(default_load_mulitplier)
+    @task(default_load_multiplier)
     def get_item_collection(self):
-        self.client.get("/collections/test-collection/items")
+        self.client.get("/collections/test-collection/items", name="get-items")
 
     @tag("get_item")
-    @task(default_load_mulitplier)
+    @task(default_load_multiplier)
     def get_item(self):
         random_number = random.randint(1, 11)
         item = self.load_file("data_loader/setup_data/sentinel-s2-l2a-cogs_0_100.json")
         random_id = item["features"][random_number]["id"]
-        self.client.get(f"/collections/test-collection/items/{random_id}", name="/item")
+        self.client.get(
+            f"/collections/test-collection/items/{random_id}", name="get-item"
+        )
 
     @tag("get_bbox")
-    @task(default_load_mulitplier)
+    @task(0)
     def get_bbox_search(self):
-        self.client.get("/search?bbox=-16.171875,-79.095963,179.992188,19.824820")
+        self.client.get(
+            "/search?bbox=-16.171875,-79.095963,179.992188,19.824820",
+            name="get-search-bbox",
+        )
 
     @tag("post_bbox")
-    @task(default_load_mulitplier)
+    @task(default_load_multiplier)
     def post_bbox_search(self):
         self.client.post(
             "/search",
             json={"bbox": [16.171875, -79.095963, 179.992188, 19.824820]},
-            name="bbox",
+            name="post-search-bbox",
         )
 
     @tag("point_intersects")
-    @task(default_load_mulitplier)
+    @task(default_load_multiplier)
     def post_intersects_search(self):
         self.client.post(
             "/search",
@@ -77,84 +124,105 @@ class WebsiteTestUser(HttpUser):
                 "collections": ["test-collection"],
                 "intersects": {"type": "Point", "coordinates": [150.04, -33.14]},
             },
-            name="point-intersects",
+            name="post-search-intersects",
         )
 
-    def get_collection_ids(self):
-        collections_response = self.client.get("/collections")
-        if collections_response.status_code == 200:
-            collections_body = collections_response.json()
-            print(f"Found {len(collections_body['collections'])} collections")
-            collection_ids = [
-                collection["id"] for collection in collections_body["collections"]
-            ]
-            return collection_ids
-        else:
-            # TODO proper error handling
-            print("Get collections: non-200 response status code")
-            return None
-
-    def parse_request_items(self, collection_id, items_response):
-        # parse response, if > 0 items then request Items
-        if items_response.status_code == 200:
-            items_body = items_response.json()
-            item_ids = [feature["id"] for feature in items_body["features"]]
-        else:
-            # TODO proper error handling
-            print("Get items: non-200 response status code")
-            return None
-
-        # request between 1 and min(10, result count) Items, serially
-        for item_id in item_ids:
-            self.client.get(
-                f"/collections/{collection_id}/items/{item_id}", name="/item"
-            )
-
     @tag("basic_nonspatial")
-    @task(1)
+    @task(default_load_multiplier)
     def basic_nonspatial_search(self):
-        collection_ids = self.request_collection_ids()
-
-        # /search request for random valid collection id
-        # use default limit and sortby, randomize GET / POST
+        """simulate a user searching for a collection by id"""
+        collection_ids = self.get_collection_ids()
         collection_id = random.choice(collection_ids)
-        get_post = random.choice([self.client.get, self.client.post])
-        items_response = get_post("/search", json={"collections": [collection_id]})
+
+        # randomize GET / POST
+        get_post = random.choice(["GET", "POST"])
+        if get_post == "GET":
+            items_response = self.client.get(
+                f"/search?collections={collection_id}", name="get-search-collection"
+            )
+        elif get_post == "POST":
+            items_response = self.client.post(
+                "/search",
+                json={"collections": [collection_id]},
+                name="post-search-collection",
+            )
 
         self.parse_request_items(collection_id, items_response)
 
-    @tag("paged_poi")
-    @task(1)
+    @tag("intersects_sortby")
+    @task(default_load_multiplier)
     def paged_poi_search(self):
+        """simulate a user seaching within a collection bbox using a point"""
         # get the bbox of a random collection
         collection_ids = self.get_collection_ids()
         collection_id = random.choice(collection_ids)
-        collection_response = self.client.get(f"collections/{collection_id}")
-        bbox = collection_response.json()["extent"]["spatial"]["bbox"]
+        bbox = self.get_collection_bbox(collection_id)
 
-        # execute a /search request with randomised intersects point within the bbox
-        # randomise whether request is submitted via GET or Post
-        # TODO request a randomised page of search results using the token parameters
-        # TODO randomise the sort order among available fields
-        get_post = random.choice([self.client.get, self.client.post])
-        x = random.random() * (bbox[0] - bbox[2]) + bbox[0]
-        y = random.random() * (bbox[1] - bbox[3]) + bbox[1]
-        items_response = get_post(
-            "/search", json={"intersects": {"type": "Point", "coordinates": [x, y]}}
+        # create random point inside bbox for /search intersects
+        x = random.random() * (bbox[2] - bbox[0]) + bbox[0]
+        y = random.random() * (bbox[3] - bbox[1]) + bbox[1]
+
+        # search (only POST possible for "intersects")
+        sortby = self.get_sortby("POST")
+        items_response = self.client.post(
+            "/search",
+            json={
+                "collections": [collection_id],
+                "intersects": {"type": "Point", "coordinates": [x, y]},
+                "sortby": sortby,
+            },
+            name="post-multisearch-intersects",
         )
+
+        self.parse_request_items(collection_id, items_response)
+
+    @tag("user_bbox")
+    @task(default_load_multiplier)
+    def paged_bbox_search(self):
+        """simulate a user searching within a collection bbox using an AOI"""
+        # get the bbox of a random collection
+        collection_ids = self.get_collection_ids()
+        collection_id = random.choice(collection_ids)
+        bbox = self.get_collection_bbox(collection_id)
+
+        # create a random search bbox inside collection bbox
+        x = [random.random() * (bbox[2] - bbox[0]) + bbox[0] for _ in range(2)]
+        y = [random.random() * (bbox[3] - bbox[1]) + bbox[1] for _ in range(2)]
+        search_bbox = [min(x), min(y), max(x), max(y)]
+
+        # search, randomly using GET or POST
+        get_post = random.choice(["GET", "POST"])
+        sortby = self.get_sortby(get_post)
+        if get_post == "GET":
+            search_bbox_str = ",".join([str(x) for x in search_bbox])
+            items_response = self.client.get(
+                f"/search?collections={collection_id}&bbox={search_bbox_str}"
+                + f"&sortby={','.join(sortby)}",
+                name="get-multisearch-bbox",
+            )
+        elif get_post == "POST":
+            items_response = self.client.post(
+                "/search",
+                json={
+                    "collections": [collection_id],
+                    "bbox": search_bbox,
+                    "sortby": sortby,
+                },
+                name="post-multisearch-bbox",
+            )
 
         self.parse_request_items(collection_id, items_response)
 
     #### CRUD routes
     @tag("create_item")
-    @task(default_load_mulitplier)
+    @task(0)
     def create_item(self):
         random_number = random.randint(1, 100000)
         item = test_item
         item["id"] = f"test-item-{random_number}"
         item["collection"] = "test-collection"
         self.client.post(
-            "/collections/test-collection/items", json=item, name="create-item"
+            "/collections/test-collection/items", json=item, name="post-create-item"
         )
 
 
