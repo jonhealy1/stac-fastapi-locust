@@ -13,14 +13,14 @@ Locust load balancing for stac-fastapi
 ```$ pip install -e .```
 
 ## Start Locust
-```$ locust```
+```$ stac-taurus --locust```
 
 ## Run Locust Load Balancing   
 - go to ```http://localhost:8089``` and start with desired settings
 - for testing locally from docker-compose in this repo, set Host to: ```http://localhost:8083```
 
 ## Run Taurus Load Balancing
-```$ bzt taurus_locust.yml```
+```$ stac-taurus --locust```
 
 ## References  
   

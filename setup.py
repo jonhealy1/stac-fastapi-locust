@@ -1,4 +1,4 @@
-"""stac-fastapi-locust setup.py
+"""stac-fastapi-taurus setup.py
 """
 from setuptools import setup, find_packages
 
@@ -8,10 +8,10 @@ with open("README.md", "r") as fh:
     long_description = fh.read()
 
 setup(
-    name="stac_locust",
+    name="stac_taurus",
     version=__version__,
-    description="Load balancing for stac compliant api",
-    url="https://github.com/jonhealy1/stac-fastapi-locust",
+    description="Load balancing for stac compliant apis",
+    url="https://github.com/sparkgeo/stac-fastapi-taurus",
     packages=find_packages(exclude=("tests",)),
     include_package_data=True,
     install_requires=[
@@ -22,7 +22,7 @@ setup(
         "bzt",
     ],
     entry_points={
-        'console_scripts': ['stac-locust=stac_locust_cli.cli:main']
+        'console_scripts': ['stac-taurus=stac_taurus_cli.cli:main']
     },
     author="Jonathan Healy",
     author_email="jonathan.d.healy@gmail.com",
